@@ -20,6 +20,7 @@ import (
 	"github.com/ssvlabs/ssv/observability/log"
 	"github.com/ssvlabs/ssv/observability/log/fields"
 	"github.com/ssvlabs/ssv/observability/traces"
+	"github.com/ssvlabs/ssv/observability/utils"
 	"github.com/ssvlabs/ssv/protocol/v2/message"
 	"github.com/ssvlabs/ssv/protocol/v2/ssv/queue"
 	"github.com/ssvlabs/ssv/protocol/v2/ssv/runner"
@@ -81,7 +82,10 @@ func NewValidator(pctx context.Context, cancel func(), logger *zap.Logger, optio
 	// some additional steps to prepare duty runners for handling duties
 	for _, dutyRunner := range options.DutyRunners {
 		dutyRunner.SetTimeoutFunc(v.onTimeout)
-		v.Queues[dutyRunner.GetRole()] = queue.New(options.QueueSize)
+		v.Queues[dutyRunner.GetRole()] = queue.New(
+			options.QueueSize,
+			queue.WithInboxSizeMaxMetric(queue.ValidatorQueuesInboxSizeMaxMetric, utils.FormatRunnerRole(dutyRunner.GetRole())),
+		)
 	}
 
 	return v
